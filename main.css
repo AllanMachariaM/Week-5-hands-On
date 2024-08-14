@@ -169,6 +169,18 @@ input[type=submit] {
     border-radius: 3px;
 }
 
+input:focus, button:focus {
+    border-color: #53A7D8; /* Add a clear focus indicator */
+}
+
+.input, input[type=text], input[type=password], input[type=email] {
+    margin: 10px 0;
+    padding: 10px;
+}
+
+
+
+
 .register {
 	margin: auto;
     padding: 16px 0;
@@ -192,6 +204,15 @@ input[type=submit] {
     cursor: pointer;
     border-radius: 3px;
 }
+
+@media (max-width: 600px) {
+    #container-login, #container-register {
+        width: 90%;
+        height: auto;
+    }
+}
+
+
 
 #auth-msg {
     color: #000;
