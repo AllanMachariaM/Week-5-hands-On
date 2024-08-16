@@ -5,11 +5,11 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.href = 'login.html';
     }
 
-    // Fetch user data
+    // Fetch user data on page load
     fetchUserData();
 
-    // Add transaction form submit handler
-    const transactionForm = document.getElementById('transactionForm');
+    // Handle form submission for adding transactions
+    const transactionForm = document.getElementById('expenseForm');
     transactionForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         
@@ -28,6 +28,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({ type, name, amount, date })
             });
 
+            // Check if response is in JSON format
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('Expected JSON response, got something else');
+            }
+
             const data = await response.json();
 
             if (!response.ok) {
@@ -44,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Fetch and display user data
+    // Function to fetch and display user data
     async function fetchUserData() {
         try {
             const response = await fetch('http://localhost:3000/userdata', {
@@ -53,6 +59,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     'Authorization': `Bearer ${token}`
                 }
             });
+
+            // Check if response is in JSON format
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('Expected JSON response, got something else');
+            }
 
             const data = await response.json();
 
@@ -68,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Update the UI with user data
+    // Function to update the UI with user data
     function updateUI(data) {
         document.getElementById('balance').textContent = `$${data.balance.toFixed(2)}`;
         document.getElementById('income').textContent = `$${data.income.toFixed(2)}`;
@@ -81,6 +93,65 @@ document.addEventListener('DOMContentLoaded', () => {
             const li = document.createElement('li');
             li.textContent = `${transaction.date} - ${transaction.type}: ${transaction.name} - $${transaction.amount.toFixed(2)}`;
             transactionList.appendChild(li);
+        });
+
+        // Update the chart after updating the UI
+        fetchDataAndUpdateChart('http://localhost:3000/transactions'); // Adjust the URL if needed
+    }
+
+    // Function to fetch data from the API and update the chart
+    async function fetchDataAndUpdateChart(apiUrl) {
+        try {
+            const response = await fetch(apiUrl);
+            // Check if response is in JSON format
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('Expected JSON response, got something else');
+            }
+
+            const data = await response.json();
+
+            // Assuming the data is in the following format:
+            // { labels: ['label1', 'label2', ...], values: [value1, value2, ...] }
+            const labels = data.labels || [];
+            const values = data.values || [];
+
+            // Update the chart with the fetched data
+            updateChart(labels, values);
+
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        }
+    }
+
+    // Function to create or update the chart
+    function updateChart(labels, data) {
+        const ctx = document.getElementById('expenseChart').getContext('2d');
+        
+        // Check if there's already a chart instance, if so destroy it before creating a new one
+        if (window.expenseChart) {
+            window.expenseChart.destroy();
+        }
+
+        window.expenseChart = new Chart(ctx, {
+            type: 'bar', // Chart type
+            data: {
+                labels: labels, // X-axis labels
+                datasets: [{
+                    label: 'Expenses',
+                    data: data, // Data for the chart
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true // Start the y-axis at zero
+                    }
+                }
+            }
         });
     }
 });
